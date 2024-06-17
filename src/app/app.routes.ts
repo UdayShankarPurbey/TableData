@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { EquityDataMasterComponent } from './equity-data-master/equity-data-master.component';
+import { EquityDataMasterComponent } from './pages/equity-data-master/equity-data-master.component';
 import { LayoutComponent } from './component/layout/layout.component';
 
 export const routes: Routes = [
