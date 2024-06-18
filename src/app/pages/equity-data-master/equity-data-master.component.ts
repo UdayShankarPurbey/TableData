@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angul
 import { CommonModule } from '@angular/common';
 import { ExcelService } from '../../services/excel/excel.service';
 import { NzTableModule } from 'ng-zorro-antd/table';
+import { ScreenerService } from '../../services/screener/screener.service';
 
 
 @Component({
@@ -28,10 +29,11 @@ export class EquityDataMasterComponent {
 
   constructor(
     private excelService : ExcelService,
-    private fb : FormBuilder
+    private fb : FormBuilder,
+    private screenerService : ScreenerService,
   ) {
     this.loginDataForm = fb.group({
-      csrToken: [''],
+      csrfToken: [''],
       sessionId: ['']
     });
   }
@@ -72,7 +74,22 @@ export class EquityDataMasterComponent {
 
   getCookieData() {
     console.log(this.loginDataForm.value);
+    this.dataToDisplay.map((item : any) => {
+      this.screenerService.getScreenerData(item.Company_Name , this.loginDataForm.value).subscribe((res : any) => item.realtedData = res);
+    });
 
+  //   [
+  //     {
+  //         "id": 38,
+  //         "name": "ABM Knowledgeware Ltd",
+  //         "url": "/company/531161/"
+  //     },
+  //     {
+  //         "id": null,
+  //         "name": "Search everywhere: ABM KNOWLEDGEWARE",
+  //         "url": "/full-text-search/?q=ABM+KNOWLEDGEWARE"
+  //     }
+  // ]
   }
 
   dowloadData() {

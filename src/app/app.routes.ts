@@ -8,6 +8,11 @@ export const routes: Routes = [
     component : LayoutComponent,
     children : [
       {
+        path : '',
+        redirectTo : 'equityMaster',
+        pathMatch : 'full'
+      },
+      {
         path : 'equityMaster',
         component : EquityDataMasterComponent
       }
