@@ -17,7 +17,6 @@ app.use(morgan('dev'))
 app.post('/convert', async (req, res) => {
     const { csrfToken , sessionId , searchTerm} = req.body;
     const cookies = `csrftoken=${csrfToken}; sessionid=${sessionId}`;
-    console.log(cookies);
   
     try {
       const response = await axios.get(`https://www.screener.in/api/company/search/?q=${searchTerm}&v=3&fts=1`, {

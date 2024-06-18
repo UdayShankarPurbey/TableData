@@ -7,6 +7,9 @@ import { ExcelService } from '../../services/excel/excel.service';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { ScreenerService } from '../../services/screener/screener.service';
 
+import { NzSpinModule } from 'ng-zorro-antd/spin';
+
+
 
 @Component({
   selector: 'app-equity-data-master',
@@ -17,15 +20,19 @@ import { ScreenerService } from '../../services/screener/screener.service';
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
-    NzTableModule
+    NzTableModule,
+    NzSpinModule
+
   ],
   templateUrl: './equity-data-master.component.html',
   styleUrl: './equity-data-master.component.css'
 })
-export class EquityDataMasterComponent {
+export class EquityDataMasterComponent  {
   data : any = [];
   dataToDisplay : any = [];
   loginDataForm : FormGroup;
+  nestedTableData : any = [];
+  loader : boolean = false;
 
   constructor(
     private excelService : ExcelService,
@@ -33,8 +40,8 @@ export class EquityDataMasterComponent {
     private screenerService : ScreenerService,
   ) {
     this.loginDataForm = fb.group({
-      csrfToken: [''],
-      sessionId: ['']
+      csrfToken: ['oy2CRUOHwDybkU2hBIpP2kyHjoBvshIq'],
+      sessionId: ['utnfgn5qqeag1p3nmhh7mrjjr5st2wia']
     });
   }
 
@@ -54,7 +61,7 @@ export class EquityDataMasterComponent {
     // Loop through each row
     for (let i = 0; i < trLength; i++) {
       // Get data from each column in the current row
-      let Company_Name = body.querySelectorAll('tr')[i].querySelector('td')?.querySelector('span')?.innerText;
+      let Company_Name = (body.querySelectorAll('tr')[i].querySelector('td')?.querySelector('span')?.innerText)?.trim();
       let dividend_type = body.querySelectorAll('tr')[i].querySelectorAll('td')[1]?.innerText;
       let dividend_percentage = body.querySelectorAll('tr')[i].querySelectorAll('td')[2]?.innerText;
       let announcement_Date = body.querySelectorAll('tr')[i].querySelectorAll('td')[3]?.innerText;
@@ -70,29 +77,81 @@ export class EquityDataMasterComponent {
         ex_dividend_date
       })
     }
+    let today = new Date(Date.now());
+    today.setHours(0, 0, 0, 0); // Set time to 00:00:00
+
+    this.dataToDisplay = this.dataToDisplay.filter((item : any) => {
+      let exDividendDate = new Date(item.ex_dividend_date);
+      return exDividendDate >= today;
+    });
   }
 
-  getCookieData() {
-    console.log(this.loginDataForm.value);
-    this.dataToDisplay.map((item : any) => {
-      this.screenerService.getScreenerData(item.Company_Name , this.loginDataForm.value).subscribe((res : any) => item.realtedData = res);
-    });
 
-  //   [
-  //     {
-  //         "id": 38,
-  //         "name": "ABM Knowledgeware Ltd",
-  //         "url": "/company/531161/"
-  //     },
-  //     {
-  //         "id": null,
-  //         "name": "Search everywhere: ABM KNOWLEDGEWARE",
-  //         "url": "/full-text-search/?q=ABM+KNOWLEDGEWARE"
-  //     }
-  // ]
+  // Assuming this method is within a class
+  async processData() {
+    this.loader = true;
+    
+    const batchSize = 15; // Number of items to process before waiting
+    const delayBetweenBatches = 5000; // 10 seconds in milliseconds
+    for (let i = 0; i < this.dataToDisplay.length; i++) {
+    
+      this.dataToDisplay[i].expand = false;
+      try {
+        const data : any = await this.screenerService.getScreenerData(this.dataToDisplay[i].Company_Name, this.loginDataForm.value).toPromise();
+        let filteredResult: any[] = data.filter((result: any) => result.id);
+        this.dataToDisplay[i].relatedData = filteredResult;
+      } catch (error) {
+        console.error(`Error fetching data for ${this.dataToDisplay[i].Company_Name}:`, error);
+        // Handle error as needed (e.g., setting default values or logging)
+      }
+      if ((i + 1) % batchSize === 0 || i === this.dataToDisplay.length - 1) {
+        // If batchSize items have been processed or it's the last iteration, wait for delayBetweenBatches
+        if (i !== this.dataToDisplay.length - 1) {
+          // Don't wait after the last iteration
+          await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
+        }
+      }
+
+    }
+    this.nestedTableData = this.dataToDisplay.filter((item : any) => item?.relatedData?.length > 1);
+    this.nestedTableData.forEach((item : any) => {
+      item.relatedData.forEach((relatedItem : any) => {
+          relatedItem.checked = false;
+      });
+    });
+    this.loader = false;
+  }
+  
+  UpdateTable(data : any) {    
+    this.screenerService.getScreenerData(data.Company_Name, this.loginDataForm.value).subscribe((data : any) => {
+      console.log(data);
+    });
+  }
+
+  onItemChecked(selectedData : any , data : any , event : any) {
+    if(event) {
+      let index = this.dataToDisplay.findIndex((item : any) => item.Company_Name === data.Company_Name);
+      let filteredRelatedData = this.dataToDisplay.filter((item : any) => item.Company_Name == data.Company_Name)[0].relatedData.filter((item : any) => item.id === selectedData.id);
+      this.dataToDisplay[index].relatedData = filteredRelatedData;
+      this.nestedTableData.filter((item : any) => item.Company_Name === data.Company_Name);
+    }
   }
 
   dowloadData() {
+
+  let excelDownloadData : any = [];
+  this.dataToDisplay.forEach((element : any) => {
+    excelDownloadData.push({
+      Company_Name: element.Company_Name,
+      dividend_type : element.dividend_type,
+      dividend_percentage : element.dividend_percentage,
+      announcement_Date : element.announcement_Date,
+      record_Date : element.record_Date,
+      ex_dividend_date : element.ex_dividend_date,
+      screenerName : element.relatedData[0].name,
+      screenerUrl : element.relatedData[0].url,
+    })
+  });
     const monthNames = [
       "January", "February", "March", "April", "May", "June",
       "July", "August", "September", "October", "November", "December"
@@ -101,7 +160,7 @@ export class EquityDataMasterComponent {
     let fileName = `${monthNames[(currentDate.getMonth() + 1)]}Month`;
     let sheetName = `Week_${(Math.floor(currentDate.getDate()/7))+1}`
 
-    this.excelService.exportToExcel(this.dataToDisplay ,fileName,sheetName);
+    this.excelService.exportToExcel(excelDownloadData ,fileName,sheetName);
   }
 
 
