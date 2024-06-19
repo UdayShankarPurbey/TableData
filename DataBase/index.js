@@ -2,6 +2,7 @@ import expres from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import axios from 'axios';
+import { topGainer } from './groww.js';
 
 const app = expres();
 
@@ -32,7 +33,9 @@ app.post('/convert', async (req, res) => {
     }
 });
 
-let port = 8000
- app.listen(port || 3000 , () => {
-            console.log(`Server listening on port ${port || 3000}`);
+app.get('/groww/topGainer',topGainer);
+
+let port = 8000;
+app.listen(port || 3000 , () => {
+  console.log(`Server listening on port ${port || 3000}`);
 });
