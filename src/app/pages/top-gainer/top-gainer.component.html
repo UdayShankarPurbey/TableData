@@ -1,0 +1,40 @@
+<nz-table #basicTable [nzData]="tableData">
+    <thead>
+      <tr>
+        <th>Logo</th>
+        <th>Company Short Name</th>
+        <th>Company Name</th>
+        <th>Market Cap</th>
+        <th>Last Traded Price</th>
+        <th>Previous Close Price</th>
+        <th>Intraday Price Change</th>
+        <th>Intraday Percentage Change</th>
+        <th>Intraday High</th>
+        <th>Intraday Low</th>
+        <th>Year High</th>
+        <th>Year Low</th>
+        <th>Lower Price Range</th>
+        <th>Upper Price Range</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let data of basicTable.data">
+        <td>
+            <img [src]="data.company.logoUrl" alt="logo" width="100px" height="100px" />
+        </td>
+        <td>{{data.company.companyShortName}}</td>
+        <td>{{data.company.companyName}}</td>
+        <td>{{data.company.marketCap}}</td>
+        <td>{{data.stats.ltp}}</td>
+        <td>{{data.stats.close}}</td>
+        <td>{{data.stats.dayChange}}</td>
+        <td>{{data.stats.dayChangePerc}}</td>
+        <td>{{data.stats.high}}</td>
+        <td>{{data.stats.low}}</td>
+        <td>{{data.stats.yearHighPrice}}</td>
+        <td>{{data.stats.yearLowPrice}}</td>
+        <td>{{data.stats.lpr}}</td>
+        <td>{{data.stats.upr}}</td>        
+      </tr>
+    </tbody>
+  </nz-table>

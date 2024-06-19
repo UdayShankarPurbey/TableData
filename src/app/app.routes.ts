@@ -1,3 +1,4 @@
+import { TopGainerComponent } from './pages/top-gainer/top-gainer.component';
 import { Routes } from '@angular/router';
 import { EquityDataMasterComponent } from './pages/equity-data-master/equity-data-master.component';
 import { LayoutComponent } from './component/layout/layout.component';
@@ -15,6 +16,10 @@ export const routes: Routes = [
       {
         path : 'equityMaster',
         component : EquityDataMasterComponent
+      },
+      {
+        path : 'topGainer',
+        component : TopGainerComponent
       }
     ]
   },  
