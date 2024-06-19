@@ -110,6 +110,7 @@ export class EquityDataMasterComponent  {
     this.nestedTableData = this.dataToDisplay.filter((item : any) => item?.relatedData?.length > 1 || item?.relatedData?.length  < 1);
     this.nestedTableData.forEach((item : any) => {
       item.edit_Company_Name = item.Company_Name;
+      item.expand = true;
       item.relatedData.forEach((relatedItem : any) => {
           relatedItem.checked = false;
       });
