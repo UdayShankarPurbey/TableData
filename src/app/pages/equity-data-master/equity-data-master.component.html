@@ -1,11 +1,12 @@
+<a href="https://www.equitymaster.com/research-it/indices/dividend" class="flex justify-center my-2 text-cyan-300" target="_blank">Redirection Url</a>
+
 <div class="my-2">
   <textarea nz-input  placeholder="Enter Your Data ..." [(ngModel)]="data" [nzAutosize]="{ minRows: 3, maxRows: 5 }"></textarea>
 </div>
 <div class="flex justify-evenly p-2">
   <button nz-button nzType="primary" (click)="getData()" [disabled]="data.length == 0">Submit</button>
-  <button nz-button nzType="primary" (click)="dowloadData()" *ngIf="dataToDisplay.length > 0 && nestedTableData.length == 0">Download</button>
+  <button nz-button nzType="primary" (click)="dowloadData()" [disabled]="!(dataToDisplay.length > 0 && nestedTableData.length == 0)">Download</button>
 </div>
-
 
 
 
@@ -52,8 +53,7 @@
       <tr>
         <td [(nzExpand)]="data.expand"></td>
         <td>
-          <!-- <input nz-input placeholder="Company Name" [(ngModel)]="data.Company_Name" type="text" (ngModelChange)="UpdateTable(data)" /> -->
-          {{data.Company_Name}}
+          <input nz-input placeholder="Company Name" [(ngModel)]="data.edit_Company_Name" type="text" (ngModelChange)="UpdateTable(data)" />
         </td>
         <td>{{data.dividend_type}}</td>
         <td>{{data.dividend_percentage}}</td>
@@ -86,9 +86,9 @@
 </nz-table>
 
 
-<h2 *ngIf="dataToDisplay.length > 0" class="flex justify-center text-3xl my-2">Dividend Information</h2>
+<h2 *ngIf="dataToDisplay.length > 0 && nestedTableData.length == 0" class="flex justify-center text-3xl my-2">Dividend Information</h2>
 
-<nz-table #nestedTable [nzData]="dataToDisplay" *ngIf="dataToDisplay.length > 0" >
+<nz-table #nestedTable [nzData]="dataToDisplay" *ngIf="dataToDisplay.length > 0 && nestedTableData.length == 0" >
   <thead>
     <tr>
       <th></th>
@@ -104,10 +104,7 @@
     <ng-template ngFor let-data [ngForOf]="nestedTable.data">
       <tr>
         <td [(nzExpand)]="data.expand"></td>
-        <td>
-          <!-- <input nz-input placeholder="Company Name" [(ngModel)]="data.Company_Name" type="text" (ngModelChange)="UpdateTable(data)" /> -->
-          {{data.Company_Name}}
-        </td>
+        <td>{{data.Company_Name}}</td>
         <td>{{data.dividend_type}}</td>
         <td>{{data.dividend_percentage}}</td>
         <td>{{data.announcement_Date}}</td>
@@ -118,7 +115,7 @@
         <nz-table #innerTable [nzData]="data.relatedData" nzSize="middle" [nzShowPagination]="false">
           <thead>
             <tr>
-]              <th>Id</th>
+              <th>Id</th>
               <th>Name</th>
               <th>Url</th>
             </tr>

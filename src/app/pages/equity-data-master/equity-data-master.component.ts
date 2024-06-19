@@ -8,6 +8,7 @@ import { NzTableModule } from 'ng-zorro-antd/table';
 import { ScreenerService } from '../../services/screener/screener.service';
 
 import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzMessageService } from 'ng-zorro-antd/message';
 
 
 
@@ -38,6 +39,7 @@ export class EquityDataMasterComponent  {
     private excelService : ExcelService,
     private fb : FormBuilder,
     private screenerService : ScreenerService,
+    private messageService : NzMessageService
   ) {
     this.loginDataForm = fb.group({
       csrfToken: ['oy2CRUOHwDybkU2hBIpP2kyHjoBvshIq'],
@@ -51,16 +53,11 @@ export class EquityDataMasterComponent  {
     let parser = new DOMParser();
     let doc = parser.parseFromString(this.data, 'text/html');
 
-    // Select the table and its body
     let table = doc.querySelectorAll('table')[5];
     let body = table.querySelectorAll('tbody')[0];
-
-    // Get the number of rows in the tbody
     let trLength = body.querySelectorAll('tr').length;
 
-    // Loop through each row
     for (let i = 0; i < trLength; i++) {
-      // Get data from each column in the current row
       let Company_Name = (body.querySelectorAll('tr')[i].querySelector('td')?.querySelector('span')?.innerText)?.trim();
       let dividend_type = body.querySelectorAll('tr')[i].querySelectorAll('td')[1]?.innerText;
       let dividend_percentage = body.querySelectorAll('tr')[i].querySelectorAll('td')[2]?.innerText;
@@ -87,14 +84,12 @@ export class EquityDataMasterComponent  {
   }
 
 
-  // Assuming this method is within a class
   async processData() {
     this.loader = true;
     
     const batchSize = 15; // Number of items to process before waiting
     const delayBetweenBatches = 5000; // 10 seconds in milliseconds
     for (let i = 0; i < this.dataToDisplay.length; i++) {
-    
       this.dataToDisplay[i].expand = false;
       try {
         const data : any = await this.screenerService.getScreenerData(this.dataToDisplay[i].Company_Name, this.loginDataForm.value).toPromise();
@@ -102,19 +97,19 @@ export class EquityDataMasterComponent  {
         this.dataToDisplay[i].relatedData = filteredResult;
       } catch (error) {
         console.error(`Error fetching data for ${this.dataToDisplay[i].Company_Name}:`, error);
-        // Handle error as needed (e.g., setting default values or logging)
+        this.messageService.error(`Error fetching data for ${this.dataToDisplay[i].Company_Name}:`);
+        break;
       }
       if ((i + 1) % batchSize === 0 || i === this.dataToDisplay.length - 1) {
-        // If batchSize items have been processed or it's the last iteration, wait for delayBetweenBatches
         if (i !== this.dataToDisplay.length - 1) {
-          // Don't wait after the last iteration
           await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
         }
       }
 
     }
-    this.nestedTableData = this.dataToDisplay.filter((item : any) => item?.relatedData?.length > 1);
+    this.nestedTableData = this.dataToDisplay.filter((item : any) => item?.relatedData?.length > 1 || item?.relatedData?.length  < 1);
     this.nestedTableData.forEach((item : any) => {
+      item.edit_Company_Name = item.Company_Name;
       item.relatedData.forEach((relatedItem : any) => {
           relatedItem.checked = false;
       });
@@ -123,8 +118,14 @@ export class EquityDataMasterComponent  {
   }
   
   UpdateTable(data : any) {    
-    this.screenerService.getScreenerData(data.Company_Name, this.loginDataForm.value).subscribe((data : any) => {
-      console.log(data);
+    this.screenerService.getScreenerData(data.edit_Company_Name, this.loginDataForm.value).subscribe((item : any) => {
+      item = item.filter((result: any) => result.id);
+      item.map((result : any) => result.checked = false);
+
+      if(item.length > 0) {
+        let index = this.dataToDisplay.findIndex((item : any) => item.Company_Name === data.Company_Name);
+        this.dataToDisplay[index].relatedData = item;
+      }
     });
   }
 
@@ -133,7 +134,7 @@ export class EquityDataMasterComponent  {
       let index = this.dataToDisplay.findIndex((item : any) => item.Company_Name === data.Company_Name);
       let filteredRelatedData = this.dataToDisplay.filter((item : any) => item.Company_Name == data.Company_Name)[0].relatedData.filter((item : any) => item.id === selectedData.id);
       this.dataToDisplay[index].relatedData = filteredRelatedData;
-      this.nestedTableData.filter((item : any) => item.Company_Name === data.Company_Name);
+      this.nestedTableData = this.nestedTableData.filter((item : any) => item.Company_Name !== data.Company_Name);
     }
   }
 
